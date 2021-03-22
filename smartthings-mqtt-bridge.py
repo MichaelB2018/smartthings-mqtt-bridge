@@ -7,7 +7,7 @@
 #
 # To run in crontab, do the same again as root
 # sudo su -
-# pip3 install paho-mqtt tendo
+# pip3 install paho-mqtt tendo pyyaml
 #
 #
 # CRONTAB:
@@ -131,7 +131,7 @@ class receiveMessageFromSmarthub(BaseHTTPRequestHandler):
 
 def sendMQTT(topic, msg):
     logger.info("sending message to MQTT: " + topic + " = " + msg)
-    t.publish(topic,msg,retain=config["mqtt"]["retain"])
+    t.publish(topic,msg,retain=((config["mqtt"]["retain"]) if (not "/button/state" in topic) else False))
     
 def sendStartupInfo(subscriptions):
     done = {}
@@ -140,10 +140,10 @@ def sendStartupInfo(subscriptions):
         if pieces[1] not in done:
             topic = pieces[1].lower().replace(" ", "_").replace("(", "").replace(")", "") 
             if pieces[2] == "level": 
-                sendMQTT("homeassistant/cover/"+topic+"/config", '{"name": "'+pieces[1]+'", "command_topic": "'+config['mqtt']['preface']+'/'+pieces[1]+'/level/cmd", "position_topic": "'+config['mqtt']['preface']+'/'+pieces[1]+'/level/'+config['mqtt']['state_read_suffix']+'", "set_position_topic": "'+config['mqtt']['preface']+'/'+pieces[1]+'/level/cmd", "payload_open": "100", "payload_close": "0", "state_open": "100", "state_closed": "0"}')
+                sendMQTT("homeassistant/cover/"+topic+"/config", '{"name": "'+pieces[1]+'", "unique_id": "SmartThings_level_'+pieces[1]+'", "command_topic": "'+config['mqtt']['preface']+'/'+pieces[1]+'/level/cmd", "position_topic": "'+config['mqtt']['preface']+'/'+pieces[1]+'/level/'+config['mqtt']['state_read_suffix']+'", "set_position_topic": "'+config['mqtt']['preface']+'/'+pieces[1]+'/level/cmd", "payload_open": "100", "payload_close": "0", "state_open": "100", "state_closed": "0"}')
                 done[pieces[1]] = True
             elif pieces[2] == "switch":
-                sendMQTT("homeassistant/switch/"+topic+"/config", '{"name": "'+pieces[1]+'", "command_topic": "'+config['mqtt']['preface']+'/'+pieces[1]+'/switch/cmd", "state_topic": "'+config['mqtt']['preface']+'/'+pieces[1]+'/switch/'+config['mqtt']['state_read_suffix']+'", "payload_on": "on", "payload_off": "off", "state_on": "on", "state_off": "off"}')
+                sendMQTT("homeassistant/switch/"+topic+"/config", '{"name": "'+pieces[1]+'", "unique_id": "SmartThings_switch_'+pieces[1]+'", "command_topic": "'+config['mqtt']['preface']+'/'+pieces[1]+'/switch/cmd", "state_topic": "'+config['mqtt']['preface']+'/'+pieces[1]+'/switch/'+config['mqtt']['state_read_suffix']+'", "payload_on": "on", "payload_off": "off", "state_on": "on", "state_off": "off"}')
                 done[pieces[1]] = True
             else: 
                 logger.error("Unknown component: "+pieces[1]+" of type: "+pieces[2])
